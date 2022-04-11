@@ -9,59 +9,62 @@ class App extends Component {
     super();
 
     this.state = {
-        'pushEvents': [],
-        'pullRequestReviewEvents': [],
-        'pullRequestEvents': [],
-        'issueCommentEvents': [],
-        'createEvents': [],
-        'deleteEvents': [],
     }
+  }
+
+ getDate(timestamp) {
+    let date = new Date(timestamp);
+    let month = date.toLocaleString('en-US', { month: "long" });
+    let year = date.toLocaleString('en-US', { month: "long" });
   }
 
   async componentDidMount() {
-    let response = await axios.get('https://api.github.com/users/ramonaspence/events')
+    let response = await axios.get("https://api.github.com/users/ramonaspence/events")
     for (let i = 0; i < response.data.length; i++) {
-      if (response.data[i]['type'] === 'PushEvent') {
-        let pushEvents = [...this.state['pushEvents']];
-        pushEvents.push(response.data[i]);
-        this.setState({pushEvents: pushEvents});
-        }
-      else if (response.data[i]['type'] === 'PullRequestReviewEvent' || response.data[i]['type'] ===  'PullRequestsReviewCommentEvent') {
-        let pullRequestReviewEvents = [...this.state['pullRequestReviewEvents']];
-        pullRequestReviewEvents.push(response.data[i]);
-        this.setState({pullRequestReviewEvents: pullRequestReviewEvents})
-        }
-      else if (response.data[i]['type'] === 'PullRequestEvent') {
-        let pullRequestEvents = [...this.state['pullRequestEvents']];
-        pullRequestEvents.push(response.data[i]);
-        this.setState({pullRequestEvents: pullRequestEvents})
+      if (response.data[i + 1] != null) {
+        response.data[i]['next_node'] = response.data[i + 1]
       }
-      else if (response.data[i]['type'] === 'IssueCommentEvent') {
-        let issueCommentEvents = [...this.state['issueCommentEvents']];
-        issueCommentEvents.push(response.data[i]);
-        this.setState({issueCommentEvents: issueCommentEvents})
+      let date = new Date(response.data[i]['created_at'])
+      let month = date.getMonth()
+      if (this.state[month] != null) {
+        let state = {...this.state} // state = shallow copy of this.state[3]
+        state[month].push(response.data[i]) // adds new event to shallow copy of this.state[3]
+        this.setState(state)
       }
-      else if (response.data[i]['type'] === 'CreateEvent') {
-        let createEvents = [...this.state['createEvents']];
-        createEvents.push(response.data[i]);
-        this.setState({createEvents: createEvents})
-      }
-      else if (response.data[i]['type'] === 'DeleteEvent') {
-        let deleteEvents = [...this.state['deleteEvents']];
-        deleteEvents.push(response.data[i]);
-        this.setState({deleteEvents: deleteEvents})
+      else {
+        let newState = {[month]: []}
+        newState[month].push(response.data[i])
+        this.setState(newState)
       }
     }
-    console.log('state', this.state);
   }
 
+/*
+To format github activity data:
+
+divide the object into lists according to the events' dates, so that each list contains the events from a single week.
+For each week, group the PushEvents together and the PullRequestReviews together.
+PushEvents can also list the repositories that were committed to and how many commits were made to each.
+PullRequestEvents can list the Pull Request itself, plus the amount of comments(?) that the PR received.
+*/
+
   render() {
+
     return(
-      <h1>
-        Hello, World!
-      </h1>
+      <div>
+        {/* <span></span>
+
+        {this.state.events.map((event, i) => {
+          console.log('fired');
+          return (
+            <div>
+              
+            </div>
+          )
+        })} */}
+
+      </div>
     )
   }
 }
-
 export default App;
